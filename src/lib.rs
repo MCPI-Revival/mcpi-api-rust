@@ -11,13 +11,14 @@ mod tests {
         assert_eq!(2 + 2, 4);
         let mut mc = create("localhost:4711");
         let position = Vec3 {
-            x: -2,
-            y: 8,
-            z: -2
+            x: 25,
+            y: 0,
+            z: 5
         };
         mc.post_to_chat("Test");
         println!("{}",mc.get_block(position));
         println!("{}",mc.get_block_with_data(position));
+        mc.set_block(position,18,1);
     }
 }
 
@@ -45,7 +46,7 @@ impl Connection {
         let mut reader = BufReader::new(&self.stream);
         let mut line = String::new();
         reader.read_line(&mut line);
-        line
+        line.replace('\n',"")
     }
 
     pub fn send_receive(&mut self, msg:&str) -> String {
@@ -65,6 +66,10 @@ impl Minecraft {
 
     pub fn get_block_with_data(&mut self, pos:Vec3) -> String {
         self.conn.send_receive(&format!("world.getBlockWithData({},{},{})", pos.x, pos.y, pos.z))
+    }
+
+    pub fn set_block(&mut self, pos:Vec3, blocktype:u8, blockdata:u8) {
+        self.conn.send(&format!("world.setBlock({},{},{},{},{})", pos.x, pos.y, pos.z, blocktype, blockdata));
     }
 }
 
