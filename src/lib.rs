@@ -32,9 +32,9 @@ struct Connection {
 
 #[derive(Clone, Copy)]
 pub struct Vec3 {
-    x:i32,
-    y:i32,
-    z:i32
+    pub x:i32,
+    pub y:i32,
+    pub z:i32
 }
 
 impl Connection {
