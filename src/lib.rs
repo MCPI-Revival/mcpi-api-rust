@@ -1,6 +1,6 @@
 use std::io::prelude::*;
 use std::net::TcpStream;
-use std::io::{Result as IoResult, Error, BufReader};
+use std::io::BufReader;
 
 #[cfg(test)]
 mod tests {
@@ -16,7 +16,8 @@ mod tests {
             z: -2
         };
         mc.post_to_chat("Test");
-        println!(mc.get_block(position));
+        println!("{}",mc.get_block(position));
+        println!("{}",mc.get_block_with_data(position));
     }
 }
 
@@ -28,6 +29,7 @@ struct Connection {
     stream:TcpStream
 }
 
+#[derive(Clone, Copy)]
 pub struct Vec3 {
     x:i32,
     y:i32,
@@ -39,14 +41,14 @@ impl Connection {
         self.stream.write(&format!("{}\n", msg).as_bytes());
     }
 
-    pub fn receive(&mut self) -> &str {
+    pub fn receive(&mut self) -> String {
         let mut reader = BufReader::new(&self.stream);
         let mut line = String::new();
         reader.read_line(&mut line);
-        line.as_str()
+        line
     }
 
-    pub fn send_receive(&mut self, msg:&str) -> &str {
+    pub fn send_receive(&mut self, msg:&str) -> String {
         self.send(msg);
         self.receive()
     }
@@ -57,13 +59,17 @@ impl Minecraft {
         self.conn.send(&format!("chat.post({})", msg));
     }
 
-    pub fn get_block(&mut self, pos:Vec3) -> &str{
+    pub fn get_block(&mut self, pos:Vec3) -> String{
         self.conn.send_receive(&format!("world.getBlock({},{},{})", pos.x, pos.y, pos.z))
+    }
+
+    pub fn get_block_with_data(&mut self, pos:Vec3) -> String {
+        self.conn.send_receive(&format!("world.getBlockWithData({},{},{})", pos.x, pos.y, pos.z))
     }
 }
 
 pub fn create(adress:&str) -> Minecraft {
-    let mut stream = TcpStream::connect(adress);
+    let stream = TcpStream::connect(adress);
     match stream {
         Ok(_) => {}
         Err(_) => {
