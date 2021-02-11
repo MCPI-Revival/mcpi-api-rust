@@ -17,7 +17,7 @@ mod tests {
         };
         mc.post_to_chat("Test");
         println!("{}",mc.get_block(position));
-        println!("{}",mc.get_block_with_data(position));
+        println!("{:?}",mc.get_block_with_data(position));
         mc.set_block(position,18,1);
     }
 }
@@ -60,12 +60,12 @@ impl Minecraft {
         self.conn.send(&format!("chat.post({})", msg));
     }
 
-    pub fn get_block(&mut self, pos:Vec3) -> String{
-        self.conn.send_receive(&format!("world.getBlock({},{},{})", pos.x, pos.y, pos.z))
+    pub fn get_block(&mut self, pos:Vec3) -> u8 {
+        self.conn.send_receive(&format!("world.getBlock({},{},{})", pos.x, pos.y, pos.z)).parse::<u8>().unwrap()
     }
 
-    pub fn get_block_with_data(&mut self, pos:Vec3) -> String {
-        self.conn.send_receive(&format!("world.getBlockWithData({},{},{})", pos.x, pos.y, pos.z))
+    pub fn get_block_with_data(&mut self, pos:Vec3) -> Vec<u8> {
+        self.conn.send_receive(&format!("world.getBlockWithData({},{},{})", pos.x, pos.y, pos.z)).split(',').map(|s| s.parse()).collect::<Result<Vec<u8>, _>>().unwrap()
     }
 
     pub fn set_block(&mut self, pos:Vec3, blocktype:u8, blockdata:u8) {
