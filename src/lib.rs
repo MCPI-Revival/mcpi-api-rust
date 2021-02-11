@@ -10,15 +10,21 @@ mod tests {
     fn it_works() {
         assert_eq!(2 + 2, 4);
         let mut mc = create("localhost:4711");
-        let position = Vec3 {
+        let position1 = Vec3 {
             x: 25,
             y: 0,
             z: 5
         };
+        let position2 = Vec3 {
+            x: 30,
+            y: 5,
+            z: 10
+        };
         mc.post_to_chat("Test");
-        println!("{}",mc.get_block(position));
-        println!("{:?}",mc.get_block_with_data(position));
-        mc.set_block(position,18,1);
+        println!("{}",mc.get_block(position1));
+        println!("{:?}",mc.get_block_with_data(position1));
+        mc.set_block(position1,18,1);
+        mc.set_blocks(position1,position2,18,1);
     }
 }
 
@@ -70,6 +76,10 @@ impl Minecraft {
 
     pub fn set_block(&mut self, pos:Vec3, blocktype:u8, blockdata:u8) {
         self.conn.send(&format!("world.setBlock({},{},{},{},{})", pos.x, pos.y, pos.z, blocktype, blockdata));
+    }
+
+    pub fn set_blocks(&mut self, pos1:Vec3, pos2:Vec3, blocktype:u8, blockdata:u8) {
+        self.conn.send(&format!("world.setBlocks({},{},{},{},{},{},{},{})", pos1.x,pos1.y,pos1.z,pos2.x,pos2.y,pos2.z,blocktype,blockdata));
     }
 }
 
