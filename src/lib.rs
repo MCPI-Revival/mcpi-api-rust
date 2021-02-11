@@ -5,6 +5,7 @@ use std::io::BufReader;
 #[cfg(test)]
 mod tests {
     use crate::{create, Vec3};
+    use std::thread::sleep;
 
     #[test]
     fn it_works() {
@@ -85,6 +86,14 @@ impl Minecraft {
 
     pub fn get_height(&mut self, pos:Vec3) -> u8 {
         self.conn.send_receive(&format!("world.getHeight({},{})", pos.x,pos.z)).parse::<u8>().unwrap()
+    }
+
+    fn save_checkpoint(&mut self) {
+        self.conn.send("world.checkpoint.save");
+    }
+
+    fn restore_checkpoint(&mut self) {
+        self.conn.send("world.checkpoint.restore");
     }
 }
 
