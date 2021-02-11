@@ -27,6 +27,7 @@ mod tests {
         mc.set_block(position1,18,1);
         mc.set_blocks(position1,position2,18,1);
         println!("{}",mc.get_height(position1));
+        mc.setting("world_immutable", false);
     }
 }
 
@@ -94,6 +95,10 @@ impl Minecraft {
 
     fn restore_checkpoint(&mut self) {
         self.conn.send("world.checkpoint.restore");
+    }
+
+    pub fn setting(&mut self, setting:&str, status:bool) {
+        self.conn.send(&format!("world.setting({},{})",setting,if status == true {1} else {0}));
     }
 }
 
