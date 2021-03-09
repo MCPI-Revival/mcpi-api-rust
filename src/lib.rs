@@ -4,23 +4,12 @@ use std::io::BufReader;
 
 #[cfg(test)]
 mod tests {
-    use crate::{create, Vec3};
-    use std::thread::sleep;
+    use crate::{create};
 
     #[test]
     fn it_works() {
         assert_eq!(2 + 2, 4);
         let mut mc = create("localhost:4711");
-        let position1 = Vec3 {
-            x: 25,
-            y: 0,
-            z: 5
-        };
-        let position2 = Vec3 {
-            x: 30,
-            y: 5,
-            z: 10
-        };
         mc.post_to_chat("Test");
     }
 }
@@ -42,13 +31,13 @@ pub struct Vec3 {
 
 impl Connection {
     pub fn send(&mut self, msg:&str) {
-        self.stream.write(&format!("{}\n", msg).as_bytes());
+        self.stream.write(&format!("{}\n", msg).as_bytes()).expect("Failed to send! Is MCPI still running?");
     }
 
     pub fn receive(&mut self) -> String {
         let mut reader = BufReader::new(&self.stream);
         let mut line = String::new();
-        reader.read_line(&mut line);
+        reader.read_line(&mut line).expect("Failed to receive! Is MCPI still running?");
         line.replace('\n',"")
     }
 
