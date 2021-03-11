@@ -1,6 +1,7 @@
 use std::io::prelude::*;
 use std::net::TcpStream;
 use std::io::BufReader;
+use std::cmp::{min, max};
 
 #[cfg(test)]
 mod tests {
@@ -10,7 +11,7 @@ mod tests {
     fn it_works() {
         assert_eq!(2 + 2, 4);
         let mut mc = create("localhost:4711");
-        mc.post_to_chat("Test");
+        mc.post_to_chat("Hello World!");
     }
 }
 
@@ -60,6 +61,18 @@ impl Minecraft {
         self.conn.send_receive(&format!("world.getBlockWithData({},{},{})", pos.x, pos.y, pos.z)).split(',').map(|s| s.parse()).collect::<Result<Vec<u8>, _>>().unwrap()
     }
 
+    pub fn get_blocks(&mut self, pos1:Vec3, pos2:Vec3) -> Vec<u8> {
+        let mut results:Vec<u8> = vec![];
+        for y in min(pos1.y, pos2.y)..max(pos1.y, pos2.y)+1 {
+            for x in min(pos1.x, pos2.x)..max(pos1.x, pos2.x)+1 {
+                for z in min(pos1.z, pos2.z)..max(pos1.z, pos2.z) + 1 {
+                    results.push(self.conn.send_receive(&format!("world.getBlock({},{},{})", x,y,z)).parse::<u8>().unwrap());
+                }
+            }
+        }
+        results
+    }
+
     pub fn set_block(&mut self, pos:Vec3, blocktype:u8, blockdata:u8) {
         self.conn.send(&format!("world.setBlock({},{},{},{},{})", pos.x, pos.y, pos.z, blocktype, blockdata));
     }
@@ -68,8 +81,8 @@ impl Minecraft {
         self.conn.send(&format!("world.setBlocks({},{},{},{},{},{},{},{})", pos1.x,pos1.y,pos1.z,pos2.x,pos2.y,pos2.z,blocktype,blockdata));
     }
 
-    pub fn get_height(&mut self, pos:Vec3) -> u8 {
-        self.conn.send_receive(&format!("world.getHeight({},{})", pos.x,pos.z)).parse::<u8>().unwrap()
+    pub fn get_height(&mut self, pos:Vec3) -> i8 {
+        self.conn.send_receive(&format!("world.getHeight({},{})", pos.x,pos.z)).parse::<i8>().unwrap()
     }
 
     pub fn save_checkpoint(&mut self) {
