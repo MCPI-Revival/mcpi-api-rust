@@ -5,7 +5,7 @@ use std::cmp::{min, max};
 
 #[cfg(test)]
 mod tests {
-    use crate::{create};
+    use crate::{create, Vec3};
 
     #[test]
     fn it_works() {
@@ -67,6 +67,18 @@ impl Minecraft {
             for x in min(pos1.x, pos2.x)..max(pos1.x, pos2.x)+1 {
                 for z in min(pos1.z, pos2.z)..max(pos1.z, pos2.z) + 1 {
                     results.push(self.conn.send_receive(&format!("world.getBlock({},{},{})", x,y,z)).parse::<u8>().unwrap());
+                }
+            }
+        }
+        results
+    }
+
+    pub fn get_blocks_with_data(&mut self, pos1:Vec3, pos2:Vec3) -> Vec<Vec<u8>> {
+        let mut results:Vec<Vec<u8>> = vec![];
+        for y in min(pos1.y, pos2.y)..max(pos1.y, pos2.y)+1 {
+            for x in min(pos1.x, pos2.x)..max(pos1.x, pos2.x)+1 {
+                for z in min(pos1.z, pos2.z)..max(pos1.z, pos2.z) + 1 {
+                    results.push(self.conn.send_receive(&format!("world.getBlockWithData({},{},{})", x,y,z)).split(',').map(|s| s.parse()).collect::<Result<Vec<u8>, _>>().unwrap());
                 }
             }
         }
