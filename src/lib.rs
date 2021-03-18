@@ -5,7 +5,7 @@ use std::cmp::{min, max};
 
 #[cfg(test)]
 mod tests {
-    use crate::{create, Vec3};
+    use crate::{create};
 
     #[test]
     fn it_works() {
@@ -107,6 +107,10 @@ impl Minecraft {
 
     pub fn setting(&mut self, setting:&str, status:bool) {
         self.conn.send(&format!("world.setting({},{})",setting,if status == true {1} else {0}));
+    }
+
+    pub fn get_player_entity_ids(&mut self) -> Vec<u16> {
+        self.conn.send_receive(&format!("world.getPlayerIds()")).split("|").map(|s| s.parse()).collect::<Result<Vec<u16>, _>>().unwrap()
     }
 }
 
