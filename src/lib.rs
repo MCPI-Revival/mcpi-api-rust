@@ -5,16 +5,9 @@ use std::cmp::{min, max};
 
 #[cfg(test)]
 mod tests {
-    use crate::{create, Vec3};
 
     #[test]
     fn development_tests() {
-        assert_eq!(2 + 2, 4);
-        let pos1 = Vec3::from(-31.0, 7.0, -11.0);
-        let mut mc = create("localhost:4711");
-        mc.post_to_chat("Hello World!");
-        println!("{:?}",mc.get_player_pos());
-        mc.set_player_pos(pos1)
     }
 }
 
@@ -26,14 +19,18 @@ struct Connection {
     stream:TcpStream
 }
 
-#[derive(Clone, Copy, Debug)]
+pub struct Player<'a> {
+    conn:&'a mut Connection
+}
+
+#[derive(Debug)]
 pub struct TileVec3 {
     pub x:i32,
     pub y:i32,
     pub z:i32
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct Vec3 {
     pub x:f32,
     pub y:f32,
@@ -99,15 +96,15 @@ impl Minecraft {
         self.conn.send(&format!("chat.post({})", msg));
     }
 
-    pub fn get_block(&mut self, pos:TileVec3) -> u8 {
+    pub fn get_block(&mut self, pos:&TileVec3) -> u8 {
         self.conn.send_receive(&format!("world.getBlock({},{},{})", pos.x, pos.y, pos.z)).parse::<u8>().unwrap()
     }
 
-    pub fn get_block_with_data(&mut self, pos:TileVec3) -> Vec<u8> {
+    pub fn get_block_with_data(&mut self, pos:&TileVec3) -> Vec<u8> {
         self.conn.send_receive(&format!("world.getBlockWithData({},{},{})", pos.x, pos.y, pos.z)).split(',').map(|s| s.parse()).collect::<Result<Vec<u8>, _>>().unwrap()
     }
 
-    pub fn get_blocks(&mut self, pos1:TileVec3, pos2:TileVec3) -> Vec<u8> {
+    pub fn get_blocks(&mut self, pos1:&TileVec3, pos2:&TileVec3) -> Vec<u8> {
         let mut results:Vec<u8> = vec![];
         for y in min(pos1.y, pos2.y)..max(pos1.y, pos2.y)+1 {
             for x in min(pos1.x, pos2.x)..max(pos1.x, pos2.x)+1 {
@@ -119,7 +116,7 @@ impl Minecraft {
         results
     }
 
-    pub fn get_blocks_with_data(&mut self, pos1:TileVec3, pos2:TileVec3) -> Vec<Vec<u8>> {
+    pub fn get_blocks_with_data(&mut self, pos1:&TileVec3, pos2:&TileVec3) -> Vec<Vec<u8>> {
         let mut results:Vec<Vec<u8>> = vec![];
         for y in min(pos1.y, pos2.y)..max(pos1.y, pos2.y)+1 {
             for x in min(pos1.x, pos2.x)..max(pos1.x, pos2.x)+1 {
@@ -131,15 +128,15 @@ impl Minecraft {
         results
     }
 
-    pub fn set_block(&mut self, pos:TileVec3, blocktype:u8, blockdata:u8) {
+    pub fn set_block(&mut self, pos:&TileVec3, blocktype:u8, blockdata:u8) {
         self.conn.send(&format!("world.setBlock({},{},{},{},{})", pos.x, pos.y, pos.z, blocktype, blockdata));
     }
 
-    pub fn set_blocks(&mut self, pos1:TileVec3, pos2:TileVec3, blocktype:u8, blockdata:u8) {
+    pub fn set_blocks(&mut self, pos1:&TileVec3, pos2:&TileVec3, blocktype:u8, blockdata:u8) {
         self.conn.send(&format!("world.setBlocks({},{},{},{},{},{},{},{})", pos1.x,pos1.y,pos1.z,pos2.x,pos2.y,pos2.z,blocktype,blockdata));
     }
 
-    pub fn get_height(&mut self, pos:TileVec3) -> i8 {
+    pub fn get_height(&mut self, pos:&TileVec3) -> i8 {
         self.conn.send_receive(&format!("world.getHeight({},{})", pos.x,pos.z)).parse::<i8>().unwrap()
     }
 
@@ -159,12 +156,20 @@ impl Minecraft {
         self.conn.send_receive(&format!("world.getPlayerIds()")).split("|").map(|s| s.parse()).collect::<Result<Vec<u16>, _>>().unwrap()
     }
 
-    pub fn get_player_pos(&mut self) -> Vec3 {
+    pub fn player(&mut self) -> Player {
+        Player {
+            conn: &mut self.conn
+        }
+    }
+}
+
+impl Player<'_> {
+     pub fn get_player_pos(&mut self) -> Vec3 {
         let vec:Vec<f32> = self.conn.send_receive(&format!("player.getPos()")).split(',').map(|s| s.parse()).collect::<Result<Vec<f32>, _>>().unwrap();
         Vec3::from_vector(&vec)
     }
 
-    pub fn set_player_pos(&mut self, pos:Vec3) {
+    pub fn set_player_pos(&mut self, pos:&Vec3) {
         self.conn.send(&format!("player.setPos({},{},{})", pos.x, pos.y, pos.z));
     }
 }
