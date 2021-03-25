@@ -1,4 +1,4 @@
-use mcpi::{create, TileVec3, Vec3};
+use mcpi::{create, TileVec3};
 
 #[test]
 fn main() {
