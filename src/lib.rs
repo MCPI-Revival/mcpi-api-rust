@@ -164,13 +164,26 @@ impl Minecraft {
 }
 
 impl Player<'_> {
-     pub fn get_player_pos(&mut self) -> Vec3 {
+     pub fn get_pos(&mut self) -> Vec3 {
         let vec:Vec<f32> = self.conn.send_receive(&format!("player.getPos()")).split(',').map(|s| s.parse()).collect::<Result<Vec<f32>, _>>().unwrap();
         Vec3::from_vector(&vec)
     }
 
-    pub fn set_player_pos(&mut self, pos:&Vec3) {
+    pub fn set_pos(&mut self, pos:&Vec3) {
         self.conn.send(&format!("player.setPos({},{},{})", pos.x, pos.y, pos.z));
+    }
+
+    pub fn get_tile_pos(&mut self) -> TileVec3 {
+        let vec:Vec<i32> = self.conn.send_receive(&format!("player.getTile()")).split(',').map(|s| s.parse()).collect::<Result<Vec<i32>, _>>().unwrap();
+        TileVec3::from_vector(&vec)
+    }
+
+    pub fn set_tile_pos(&mut self, pos:&TileVec3) {
+        self.conn.send(&format!("player.setTile({},{},{})", pos.x, pos.y, pos.z))
+    }
+
+    pub fn setting(&mut self, setting:&str, status:bool) {
+        self.conn.send(&format!("player.setting({},{})",setting,if status {1} else {0}));
     }
 }
 
