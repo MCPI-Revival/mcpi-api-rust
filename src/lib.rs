@@ -1,5 +1,5 @@
 //! # MCPI API
-//! `mcpi_api` is a warpper for the Minecraft Pi Edition API handling parsing and other aspects for you.
+//! `mcpi_api` is a wrapper for the Minecraft Pi Edition API handling parsing and other aspects for you.
 use std::io::prelude::*;
 use std::net::TcpStream;
 use std::io::BufReader;

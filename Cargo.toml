@@ -3,6 +3,7 @@ name = "mcpi_api"
 version = "0.1.0"
 authors = ["blackfur <64478051+theblackfurguy@users.noreply.github.com>"]
 edition = "2018"
+description = "Wrapper for the Minecraft Pi Edition API handling parsing and other aspects for you"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
