@@ -1,3 +1,5 @@
+//! # MCPI API
+//! `mcpi_api` is a warpper for the Minecraft Pi Edition API handling parsing and other aspects for you.
 use std::io::prelude::*;
 use std::net::TcpStream;
 use std::io::BufReader;
@@ -11,6 +13,7 @@ mod tests {
     }
 }
 
+///Struct containing functions and a Connection struct.
 pub struct Minecraft {
     conn:Connection
 }
@@ -19,10 +22,12 @@ struct Connection {
     stream:TcpStream
 }
 
+///Struct containing functions and a Connection struct.
 pub struct Player<'a> {
     conn:&'a mut Connection
 }
 
+///Struct used to specify tile positions.
 #[derive(Debug)]
 pub struct TileVec3 {
     pub x:i32,
@@ -30,6 +35,7 @@ pub struct TileVec3 {
     pub z:i32
 }
 
+///Struct used to specify entity positions.
 #[derive(Debug)]
 pub struct Vec3 {
     pub x:f32,
@@ -187,6 +193,16 @@ impl Player<'_> {
     }
 }
 
+///Function to create a Minecraft struct.
+/// Takes a IP adress and a port as arguments.
+/// # Examples
+/// ```
+/// use mcpi_api::create;
+/// let mut  mc = create("localhost:4711");
+/// mc.post_to_chat("Hello World!")
+/// ```
+/// # Panics
+/// This function panics if binding to the adress fails.
 pub fn create(adress:&str) -> Minecraft {
     let stream = TcpStream::connect(adress);
     match stream {
