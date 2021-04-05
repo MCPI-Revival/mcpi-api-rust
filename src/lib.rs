@@ -44,6 +44,7 @@ pub struct Vec3 {
 }
 
 impl TileVec3 {
+    /// Function to generate a TileVec3 from 3 i32's
     pub fn from(x:i32, y:i32, z:i32) -> TileVec3 {
         TileVec3 {
             x,
@@ -51,7 +52,9 @@ impl TileVec3 {
             z
         }
     }
-
+    ///Function to generate a TileVec3 from a Vec<i32>
+    /// # Panics
+    /// This function panics if the vector contains less then 3 elements
     pub fn from_vector(vec:&Vec<i32>) -> TileVec3 {
         TileVec3 {
             x: vec[0],
@@ -62,6 +65,7 @@ impl TileVec3 {
 }
 
 impl Vec3 {
+    ///Function to generate a Vec3 from 3 f32's
     pub fn from(x:f32, y:f32, z:f32) -> Vec3 {
         Vec3 {
             x,
@@ -69,7 +73,9 @@ impl Vec3 {
             z
         }
     }
-
+    ///Function to generate a Vec3 from a Vec<f32>
+    /// # Panics
+    /// This function panics if the vector contains less then 3 elements
     pub fn from_vector(vec:&Vec<f32>) -> Vec3 {
         Vec3{
             x: vec[0],
@@ -96,20 +102,23 @@ impl Connection {
         self.receive()
     }
 }
-
+///# Panics
+/// All functions implemented on the Minecraft struct might panic if the API is not running anymore or packages fail to send.
+/// This might change in a 0.2.0 version of this crate
 impl Minecraft {
+    ///Post a message to the chat
     pub fn post_to_chat(&mut self, msg:&str) {
         self.conn.send(&format!("chat.post({})", msg));
     }
-
+    ///Get the block at a specific position
     pub fn get_block(&mut self, pos:&TileVec3) -> u8 {
         self.conn.send_receive(&format!("world.getBlock({},{},{})", pos.x, pos.y, pos.z)).parse::<u8>().unwrap()
     }
-
+    ///Get the block with data at a specific position
     pub fn get_block_with_data(&mut self, pos:&TileVec3) -> Vec<u8> {
         self.conn.send_receive(&format!("world.getBlockWithData({},{},{})", pos.x, pos.y, pos.z)).split(',').map(|s| s.parse()).collect::<Result<Vec<u8>, _>>().unwrap()
     }
-
+    ///Get a array of blocks contained in the specified area
     pub fn get_blocks(&mut self, pos1:&TileVec3, pos2:&TileVec3) -> Vec<u8> {
         let mut results:Vec<u8> = vec![];
         for y in min(pos1.y, pos2.y)..max(pos1.y, pos2.y)+1 {
@@ -121,7 +130,7 @@ impl Minecraft {
         }
         results
     }
-
+    ///Get a array of blocks with their data contained in the specified area
     pub fn get_blocks_with_data(&mut self, pos1:&TileVec3, pos2:&TileVec3) -> Vec<Vec<u8>> {
         let mut results:Vec<Vec<u8>> = vec![];
         for y in min(pos1.y, pos2.y)..max(pos1.y, pos2.y)+1 {
@@ -133,61 +142,66 @@ impl Minecraft {
         }
         results
     }
-
+    ///Set a block at a specific position
     pub fn set_block(&mut self, pos:&TileVec3, blocktype:u8, blockdata:u8) {
         self.conn.send(&format!("world.setBlock({},{},{},{},{})", pos.x, pos.y, pos.z, blocktype, blockdata));
     }
-
+    ///Fill the specified area with the a block
     pub fn set_blocks(&mut self, pos1:&TileVec3, pos2:&TileVec3, blocktype:u8, blockdata:u8) {
         self.conn.send(&format!("world.setBlocks({},{},{},{},{},{},{},{})", pos1.x,pos1.y,pos1.z,pos2.x,pos2.y,pos2.z,blocktype,blockdata));
     }
-
+    ///Get the highest point at the specified position
     pub fn get_height(&mut self, pos:&TileVec3) -> i8 {
         self.conn.send_receive(&format!("world.getHeight({},{})", pos.x,pos.z)).parse::<i8>().unwrap()
     }
-
+    ///Save the current world state as a checkpoint
     pub fn save_checkpoint(&mut self) {
         self.conn.send("world.checkpoint.save()");
     }
-
+    ///Restore a previously saved world state
     pub fn restore_checkpoint(&mut self) {
         self.conn.send("world.checkpoint.restore()");
     }
-
+    ///Set a world setting to true or false.
+    /// Available settings: "world_immutable", "nametags_visible"
     pub fn setting(&mut self, setting:&str, status:bool) {
         self.conn.send(&format!("world.setting({},{})",setting,if status == true {1} else {0}));
     }
-
+    ///Get a list of entity ids for all online players
     pub fn get_player_entity_ids(&mut self) -> Vec<u16> {
         self.conn.send_receive(&format!("world.getPlayerIds()")).split("|").map(|s| s.parse()).collect::<Result<Vec<u16>, _>>().unwrap()
     }
-
+    ///Get a instance of the Player struct containing player related functions
     pub fn player(&mut self) -> Player {
         Player {
             conn: &mut self.conn
         }
     }
 }
-
+///# Panics
+/// All functions implemented on the Player struct might panic if the API is not running anymore or packages fail to send.
+/// This might change in a 0.2.0 version of this crate
 impl Player<'_> {
+    ///Get the position of the main player
      pub fn get_pos(&mut self) -> Vec3 {
         let vec:Vec<f32> = self.conn.send_receive(&format!("player.getPos()")).split(',').map(|s| s.parse()).collect::<Result<Vec<f32>, _>>().unwrap();
         Vec3::from_vector(&vec)
     }
-
+    ///Set the position of the main player
     pub fn set_pos(&mut self, pos:&Vec3) {
         self.conn.send(&format!("player.setPos({},{},{})", pos.x, pos.y, pos.z));
     }
-
+    ///Get the tile position of the main player
     pub fn get_tile_pos(&mut self) -> TileVec3 {
         let vec:Vec<i32> = self.conn.send_receive(&format!("player.getTile()")).split(',').map(|s| s.parse()).collect::<Result<Vec<i32>, _>>().unwrap();
         TileVec3::from_vector(&vec)
     }
-
+    ///Set the tile position of the main player
     pub fn set_tile_pos(&mut self, pos:&TileVec3) {
         self.conn.send(&format!("player.setTile({},{},{})", pos.x, pos.y, pos.z))
     }
-
+    ///Set a setting for the main player
+    /// Available settings: "autojump"
     pub fn setting(&mut self, setting:&str, status:bool) {
         self.conn.send(&format!("player.setting({},{})",setting,if status {1} else {0}));
     }
