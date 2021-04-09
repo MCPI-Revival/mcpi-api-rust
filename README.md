@@ -2,6 +2,10 @@
 
 This project ports the MCPI API to rust!
 
+## How to install
+
+Simply install this by adding `mcpi_api = "0.1.1"` to your Cargo.toml
+
 ## Examples
 
 Hello world!
