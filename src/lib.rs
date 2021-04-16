@@ -9,7 +9,7 @@ use std::cmp::{min, max};
 mod tests {
 
     #[test]
-    fn development_tests() {
+    fn development_test() {
     }
 }
 
@@ -24,6 +24,10 @@ struct Connection {
 
 ///Struct containing functions and a Connection struct.
 pub struct Player<'a> {
+    conn:&'a mut Connection
+}
+
+pub struct Entity<'a> {
     conn:&'a mut Connection
 }
 
@@ -177,6 +181,12 @@ impl Minecraft {
             conn: &mut self.conn
         }
     }
+
+    pub fn entity(&mut self) -> Entity {
+        Entity {
+            conn: &mut self.conn
+        }
+    }
 }
 ///# Panics
 /// All functions implemented on the Player struct might panic if the API is not running anymore or packages fail to send.
@@ -184,8 +194,7 @@ impl Minecraft {
 impl Player<'_> {
     ///Get the position of the main player
      pub fn get_pos(&mut self) -> Vec3 {
-        let vec:Vec<f32> = self.conn.send_receive(&format!("player.getPos()")).split(',').map(|s| s.parse()).collect::<Result<Vec<f32>, _>>().unwrap();
-        Vec3::from_vector(&vec)
+        Vec3::from_vector(&self.conn.send_receive(&format!("player.getPos()")).split(',').map(|s| s.parse()).collect::<Result<Vec<f32>, _>>().unwrap())
     }
     ///Set the position of the main player
     pub fn set_pos(&mut self, pos:&Vec3) {
@@ -204,6 +213,26 @@ impl Player<'_> {
     /// Available settings: "autojump"
     pub fn setting(&mut self, setting:&str, status:bool) {
         self.conn.send(&format!("player.setting({},{})",setting,if status {1} else {0}));
+    }
+}
+
+impl Entity<'_> {
+    ///Get the position of a player entity
+    pub fn get_pos(&mut self, id:u16) -> Vec3 {
+        Vec3::from_vector(&self.conn.send_receive(&format!("entity.getPos({})", id)).split(',').map(|s| s.parse()).collect::<Result<Vec<f32>, _>>().unwrap())
+    }
+    ///Set the position of a player entity
+    pub fn set_pos(&mut self, id:u16, pos:&Vec3) {
+        self.conn.send(&format!("entity.setPos({},{},{},{})", id, pos.x, pos.y, pos.z));
+    }
+    ///Get the tile position of a player entity
+    pub fn get_tile_pos(&mut self, id:u16) -> TileVec3 {
+        let vec:Vec<i32> = self.conn.send_receive(&format!("entity.getTile({})", id)).split(',').map(|s| s.parse()).collect::<Result<Vec<i32>, _>>().unwrap();
+        TileVec3::from_vector(&vec)
+    }
+    ///Set the tile position of a player entity
+    pub fn set_tile_pos(&mut self, id:u16, pos:&TileVec3) {
+        self.conn.send(&format!("entity.setTile({},{},{},{})",id, pos.x, pos.y, pos.z))
     }
 }
 
