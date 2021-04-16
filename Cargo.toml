@@ -1,6 +1,6 @@
 [package]
 name = "mcpi_api"
-version = "0.1.1"
+version = "0.2.1"
 authors = ["blackfur <64478051+theblackfurguy@users.noreply.github.com>"]
 edition = "2018"
 description = "Wrapper for the Minecraft Pi Edition API handling parsing and other aspects for you"
