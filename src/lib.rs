@@ -31,6 +31,10 @@ pub struct Entity<'a> {
     conn:&'a mut Connection
 }
 
+pub struct Event<'a> {
+    conn:&'a mut Connection
+}
+
 ///Struct used to specify tile positions.
 #[derive(Debug)]
 pub struct TileVec3 {
@@ -45,6 +49,13 @@ pub struct Vec3 {
     pub x:f32,
     pub y:f32,
     pub z:f32
+}
+
+pub struct BlockEvent {
+    pub x: i32,
+    pub y: i32,
+    pub z: i32,
+    pub hit: bool
 }
 
 impl TileVec3 {
@@ -64,6 +75,17 @@ impl TileVec3 {
             x: vec[0],
             y: vec[1],
             z: vec[2]
+        }
+    }
+}
+
+impl BlockEvent {
+    pub fn new(x:i32, y:i32, z:i32, hit:bool) -> BlockEvent {
+        BlockEvent {
+            x,
+            y,
+            z,
+            hit
         }
     }
 }
@@ -106,6 +128,30 @@ impl Connection {
         self.receive()
     }
 }
+
+impl Event<'_> {
+    pub fn clear_all(&mut self) {
+        self.conn.send("events.clear");
+    }
+
+    pub fn poll_block_hits(&mut self) -> BlockEvent {
+        let s = self.conn.send_receive("events.block.hits()");
+
+        let mut pos = Vec::new();
+
+        if s.len() > 0 {
+            for i in s.split(",").take(3) {
+                let i = i.parse::<i32>().unwrap();
+                pos.push(i)
+            }
+            return BlockEvent::new(pos[0], pos[1], pos[2], true);
+        }
+
+        let pos = BlockEvent::new(0, 0, 0, false);
+        return pos
+    }
+}
+
 ///# Panics
 /// All functions implemented on the Minecraft struct might panic if the API is not running anymore or packages fail to send.
 /// This might change in a 0.2.0 version of this crate
@@ -184,6 +230,12 @@ impl Minecraft {
 
     pub fn entity(&mut self) -> Entity {
         Entity {
+            conn: &mut self.conn
+        }
+    }
+    
+    pub fn event(&mut self) -> Event {
+        Event {
             conn: &mut self.conn
         }
     }
